@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import "dotenv/config";
 import UserRoutes from "./routes/user.route.js";
+import BlogRoute from "./routes/blog.route.js";
 import aws from "aws-sdk";
 import { nanoid } from "nanoid";
 import ApiResponse from "./utils/ApiResponse.js";
@@ -51,3 +52,4 @@ app.get("/api/upload-url", async (req, res) => {
   }
 })
 app.use("/api", UserRoutes);
+app.use("/api",BlogRoute)

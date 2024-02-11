@@ -9,7 +9,8 @@ const blogStructure ={
   banner: "",
   content: [],
   tags: [],
-  author:{personal_info:{}}
+  author:{personal_info:{}},
+  des:"",
 
 }
 
@@ -18,6 +19,7 @@ export const EditorContext = createContext({});
 function Editor() {
   const [blog, setBlog] = useState(blogStructure);
   const [editorState, setEditorState] = useState("editor");
+  const [textEditor, setTextEditor] = useState({isReady:false});
   const {
     userAuth: { access_token },
     setUserAuth,
@@ -25,7 +27,7 @@ function Editor() {
 
 
   return (
-    <EditorContext.Provider value={{blog ,setBlog,editorState,setEditorState}}>
+    <EditorContext.Provider value={{blog ,setBlog,editorState,setEditorState,textEditor,setTextEditor}}>
       {access_token === null ? (
         <Navigate to="/signin" />
       ) : editorState === "editor" ? (

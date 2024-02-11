@@ -1,16 +1,34 @@
-import React, { useContext, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../imgs/logo.png";
 import Banner from "../imgs/blog banner.png";
 import AnimationWrapper from "../common/page-animation";
 import uploadImage from "../common/aws";
 import {Toaster, toast} from 'react-hot-toast';
 import Editor, { EditorContext } from "../pages/editor.pages";
-
+import EditorJs from "@editorjs/editorjs"
+import { tools } from "./tools.component";
+import axios from "axios";
+import { UserContext } from "../App";
 
 function BlogEditor() {
+  let {userAuth:{access_token}} = useContext(UserContext)
   const blogBannerRef = useRef(null);
-  let{blog,blog:{banner,title,content,tags},setBlog} = useContext(EditorContext)
+  let{blog,blog:{banner,title,content,tags,des},setBlog,textEditor,setTextEditor,setEditorState} = useContext(EditorContext)
+
+let navigate = useNavigate();
+  useEffect(() => {
+    if(!textEditor.isReady){
+      setTextEditor( new EditorJs({
+        holderId: "textEditor",
+        data: content,
+        tools:tools,
+        placeholder: "Write your blog here",
+      })
+      )
+    }
+   
+  },[])
 
   const handleTitleKeydonw = (e) => {
     if(e.keyCode === 13){
@@ -20,8 +38,10 @@ function BlogEditor() {
   }
 
   const handleTitleChange = (e) => {
-    e.target.style.height = "auto";
-    e.target.style.height = e.target.scrollHeight + "px";
+    let input = e.target;
+    
+    input.style.height = 'auto';
+    input.style.height = (input.scrollHeight) + 'px'; // 4px for border
     setBlog({...blog, title: e.target.value})
   }
   const handleBannerUpload = async (e) => {
@@ -39,6 +59,82 @@ function BlogEditor() {
       }
     }
   };
+
+  const handlePublishEvent = () =>{
+    if(!banner.length){
+      return toast.error("Please upload a banner")
+    }
+
+    if(!title.length){
+      return toast.error("Please write a title")
+    }
+
+    if(textEditor.isReady){
+      textEditor.save().then((data)=>{
+        if(!data.blocks.length){
+          return toast.error("Please write a blog")
+        }else{
+          setBlog({...blog, content: data})
+          setEditorState("publish")
+
+        }
+      })
+      .catch((err)=>{
+        console.log(err);
+      }
+      )
+    }
+  }
+
+  const handleSaveDraft = (e) =>{
+    if(e.target.className.includes("disable")){
+      return;
+    }
+   
+   
+
+    let LoadinToast = toast.loading("saving blog to darft");
+
+    //add disabled attribute to button
+    e.target.classList.add("disable");
+
+    if(textEditor.isReady){
+      textEditor.save().then(content=>{
+        let blogData = {
+          banner,
+          title,
+          tags,
+          des,
+          content,
+          draft: true,
+        }
+    
+        //publish blog
+        axios.post("/api/create-blog",blogData,{
+          headers:{
+            Authorization: `Bearer ${access_token}`
+          }
+        }).then(()=>{
+          e.target.classList.remove("disable");
+          toast.dismiss(LoadinToast);
+          toast.success("Blog saved in Draft 👍🏻");
+    
+          setTimeout(() => {
+            navigate("/")
+          }, 500);
+        }).catch(({response})=>{
+          e.target.classList.remove("disable");
+          toast.dismiss(LoadinToast);
+          toast.error("Failed to save blog to draft 😔");
+        })
+
+      })
+    }
+
+   
+
+
+  }
   return (
     <>
       <nav className="navbar ">
@@ -48,8 +144,12 @@ function BlogEditor() {
         <p className="max-md:hidden text-black line-clamp-1 w-full">{title.length?title:"New Blog"}</p>
 
         <div className="flex gap-4 ml-auto">
-          <button className="btn-dark py-2">Publish</button>{" "}
-          <button className="btn-light py-2">Draft</button>
+          <button className="btn-dark py-2"
+          onClick={handlePublishEvent}
+          >Publish</button>{" "}
+          <button className="btn-light py-2" 
+          onClick={handleSaveDraft}
+          >Draft</button>
         </div>
       </nav>
       <Toaster/>
@@ -77,7 +177,13 @@ function BlogEditor() {
 
               <textarea name="" id="" cols="30" rows="10" placeholder="Blog Title" className="text-4xl font-medium w-full h-20 resize-none outline-none mt-10 leading-tight placeholder:opacity-40 " onKeyDown={handleTitleKeydonw}
               onChange={handleTitleChange}
+              defaultValue={title}
               ></textarea>
+              <hr className="w-full opacity-10 my-5"/>
+
+              <div id="textEditor" className="font-gelasio"> 
+
+              </div>
             </div>
           </section>
         }
