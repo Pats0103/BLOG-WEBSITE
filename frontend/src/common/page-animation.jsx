@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 const AnimationWrapper = ({
-  childern,
+  children,
   Initial = { opacity: 0 },
   Animate = { opacity: 1 },
   Transition = { duration: 1 },
@@ -15,7 +15,7 @@ const AnimationWrapper = ({
       transition={Transition}
       className={className}
     >
-      {childern}
+      {children}
     </motion.div>
   );
 };

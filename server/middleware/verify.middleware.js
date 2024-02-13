@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../Schema/User.js';
+import User from '../models/User.js';
 import ApiResponse from '../utils/ApiResponse.js';
 const verifyUser = (req, res, next) => {
   try {
