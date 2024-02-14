@@ -32,7 +32,7 @@ function HomePage() {
           page,
           countRoute: "/api/blog-count",
         });
-        console.log(formatedData);
+
         setBlogs(formatedData);
       })
       .catch((err) => console.log(err));

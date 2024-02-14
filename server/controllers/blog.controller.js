@@ -105,9 +105,18 @@ const TrendingBlogs = async (req, res) => {
 };
 
 const searchBlogs = async (req, res) => {
-  let { tag } = req.body;
-  let findQuery = { tags: tag, draft: false };
+  let { tag, query } = req.body;
+  let findQuery = {};
   const Max_Limit = 5;
+
+  if (tag) {
+    findQuery = { tags: tag, draft: false };
+  } else if (query) {
+    findQuery = {
+      $or: [{ title: { $regex: query, $options: "i" } }],
+      draft: false,
+    };
+  }
 
   Blog.find(findQuery)
     .populate(
@@ -128,9 +137,21 @@ const searchBlogs = async (req, res) => {
 };
 
 const GetBlogsCount = async (req, res) => {
-  let { tag } = req.body;
+  let { tag, query } = req.body;
   if (tag) {
     Blog.countDocuments({ tags: tag, draft: false })
+      .then((totalDocs) => {
+        return ApiResponse(res, 200, "Blogs found", { totalDocs });
+      })
+      .catch((err) => {
+        console.log("Error occurred while fetching blogs: ", err.message);
+        return ApiResponse(res, 500, "Error occurred while fetching blogs");
+      });
+  } else if (query) {
+    Blog.countDocuments({
+      $or: [{ title: { $regex: query, $options: "i" } }],
+      draft: false,
+    })
       .then((totalDocs) => {
         return ApiResponse(res, 200, "Blogs found", { totalDocs });
       })
@@ -149,6 +170,8 @@ const GetBlogsCount = async (req, res) => {
       });
   }
 };
+
+
 export {
   CreateBlog,
   DeleteBlog,

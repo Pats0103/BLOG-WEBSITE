@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import ApiResponse from "../utils/ApiResponse.js";
-import User from "../Schema/User.js";
+import User from "../models/User.js";
 import { nanoid } from "nanoid";
 
 
@@ -114,4 +114,28 @@ const SignIn = async (req, res) => {
 
 
 
-export { SignUp , SignIn};
+const SearchUser = async (req, res) => {
+  const { query } = req.body;
+  User.find(
+    {
+      $or: [
+        { "personal_info.fullname": { $regex: query, $options: "i" } },
+        { "personal_info.username": { $regex: query, $options: "i" } },
+      ],
+    },
+    "personal_info.fullname personal_info.profile_img personal_info.username"
+  )
+    .limit(10)
+    .then((users) => {
+      if (!users.length) {
+        return ApiResponse(res, 404, "No user found");
+      }
+      return ApiResponse(res, 200, "Users found", users);
+    })
+    .catch((err) => {
+      console.log("Error occurred while searching user: ", err.message);
+      return ApiResponse(res, 500, "Error occurred while searching user");
+    });
+};
+
+export { SignUp , SignIn, SearchUser};
