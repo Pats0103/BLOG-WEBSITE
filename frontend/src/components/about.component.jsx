@@ -16,7 +16,7 @@ function AboutUser({ className, bio, socialLinks, joinedAt }) {
                 let link = socialLinks[key];
                 if(link.length>0) return <Link key={key}
                 target="_blank" to={link}>
-                <i class={"fi "+(key!= 'website'? " fi-brands-"+key:"fi-rr-globe")+" text-2xl hover:text-black"}></i>
+                <i className={"fi "+(key!= 'website'? " fi-brands-"+key:"fi-rr-globe")+" text-2xl hover:text-black"}></i>
                 </Link>
             })
         }

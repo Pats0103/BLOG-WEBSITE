@@ -34,7 +34,7 @@ function BlogPostCard({ content, author }) {
         <div className="flex gap-4 mt-7">
           <span className="btn-light py-1 px-4"> {tags[0]}</span>
           <span className="ml-3 flex gap-2 items-center text-dark-grey">
-            <i class="fi fi-br-heart text-xl"></i>
+            <i className="fi fi-br-heart text-xl"></i>
             {total_likes}
           </span>
         </div>

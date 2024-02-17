@@ -177,7 +177,7 @@ function HomePage() {
             <h1 className="font-medium text-xl mb-8 ">
               {" "}
               Trending
-              <i class="fi fi-rr-arrow-trend-up ml-2"></i>
+              <i className="fi fi-rr-arrow-trend-up ml-2"></i>
             </h1>
             <div>
               {trending == null ? (
