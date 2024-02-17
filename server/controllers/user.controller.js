@@ -138,4 +138,22 @@ const SearchUser = async (req, res) => {
     });
 };
 
-export { SignUp , SignIn, SearchUser};
+const GetUser = async (req,res)=>{
+  let {username} = req.body
+  try {
+    const user = await User.findOne({"personal_info.username":username})
+    .select("-personal_info.password -blogs")
+  
+    if(!user){
+      return ApiResponse(res,404,"User not found")
+    }
+    return ApiResponse(res,200,"User found",user)
+  
+  } catch (error) {
+    console.log("Error occurred while getting user: ", err.message);
+    return ApiResponse(res, 500, "Error occurred while getting user");
+    
+  }
+
+}
+export { SignUp , SignIn, SearchUser, GetUser};

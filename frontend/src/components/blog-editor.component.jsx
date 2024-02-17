@@ -20,7 +20,7 @@ let navigate = useNavigate();
   useEffect(() => {
     if(!textEditor.isReady){
       setTextEditor( new EditorJs({
-        holderId: "textEditor",
+        holder: "texEditor",
         data: content,
         tools:tools,
         placeholder: "Write your blog here",
@@ -154,8 +154,9 @@ let navigate = useNavigate();
       </nav>
       <Toaster/>
       <AnimationWrapper
-        childern={
-          <section>
+        
+      >
+         <section>
             <div className="mx-auto max-w-[900px] w-full ">
               <div className="relative aspect-video bg-whiten border-4 border-grey hover:opacity-80 rounded-lg">
                 <label htmlFor="uploadBanner" className=" cursor-pointer">
@@ -181,13 +182,10 @@ let navigate = useNavigate();
               ></textarea>
               <hr className="w-full opacity-10 my-5"/>
 
-              <div id="textEditor" className="font-gelasio"> 
-
-              </div>
+              <div id="texEditor" className="font-gelasio"></div>
             </div>
           </section>
-        }
-      ></AnimationWrapper>
+      </AnimationWrapper>
     </>
   );
 }

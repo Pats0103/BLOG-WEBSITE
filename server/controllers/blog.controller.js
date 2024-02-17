@@ -105,7 +105,7 @@ const TrendingBlogs = async (req, res) => {
 };
 
 const searchBlogs = async (req, res) => {
-  let { tag, query } = req.body;
+  let { tag, query,author,page } = req.body;
   let findQuery = {};
   const Max_Limit = 5;
 
@@ -116,6 +116,8 @@ const searchBlogs = async (req, res) => {
       $or: [{ title: { $regex: query, $options: "i" } }],
       draft: false,
     };
+  } else if(author){
+    findQuery = { author, draft: false }; 
   }
 
   Blog.find(findQuery)
@@ -125,6 +127,7 @@ const searchBlogs = async (req, res) => {
     )
     .sort({ publishedAt: -1 })
     .select("blog_id title banner tags publishedAt des activity -_id")
+    .skip((page - 1) * Max_Limit)
     .limit(Max_Limit)
     .then((blogs) => {
       if (!blogs.length) return ApiResponse(res, 404, "No blogs found");
@@ -137,7 +140,7 @@ const searchBlogs = async (req, res) => {
 };
 
 const GetBlogsCount = async (req, res) => {
-  let { tag, query } = req.body;
+  let { tag, query ,author} = req.body;
   if (tag) {
     Blog.countDocuments({ tags: tag, draft: false })
       .then((totalDocs) => {
@@ -159,7 +162,17 @@ const GetBlogsCount = async (req, res) => {
         console.log("Error occurred while fetching blogs: ", err.message);
         return ApiResponse(res, 500, "Error occurred while fetching blogs");
       });
-  } else {
+  } else if(author){
+    Blog.countDocuments({ author, draft: false })
+      .then((totalDocs) => {
+        return ApiResponse(res, 200, "Blogs found", { totalDocs });
+      })
+      .catch((err) => {
+        console.log("Error occurred while fetching blogs: ", err.message);
+        return ApiResponse(res, 500, "Error occurred while fetching blogs");
+      });
+  } 
+  else {
     Blog.countDocuments({ draft: false })
       .then((totalDocs) => {
         return ApiResponse(res, 200, "Blogs found", { totalDocs });

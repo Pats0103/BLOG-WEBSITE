@@ -72,10 +72,7 @@ const userSchema = mongoose.Schema({
             default: 0
         },
     },
-    google_auth: {
-        type: Boolean,
-        default: false
-    },
+
     blogs: {
         type: [ Schema.Types.ObjectId ],
         ref: 'blogs',
