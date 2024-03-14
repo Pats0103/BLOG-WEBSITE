@@ -58,7 +58,38 @@ const CreateBlog = async (req, res) => {
     });
 };
 const DeleteBlog = () => {};
-const GetBlog = () => {};
+const GetBlog = async (req, res) => {
+  let { blog_id } = req.body;
+  let incrementVal = 1;
+  try {
+    const blog = await Blog.findOneAndUpdate(
+      { blog_id },
+      { $inc: { "activity.total_reads": incrementVal } }
+    )
+      .populate(
+        "author",
+        "personal_info.username personal_info.profile_img  personal_info.fullname -_id"
+      )
+      .select("blog_id title banner tags activity publishedAt des content author -_id");
+
+    if (!blog) return ApiResponse(res, 404, "Blog not found");
+
+    if(blog){
+      User.findOneAndUpdate(
+        { "personal_info.username": blog.author.personal_info.username},
+        { $inc: { "account_info.total_reads": incrementVal } }
+      ).catch((err) => {
+        console.log("Error occurred while updating user: ", err.message);
+        return ApiResponse(res, 500, "Error occurred while updating user");
+      });
+    }
+
+    return ApiResponse(res, 200, "Blog found", blog);
+  } catch (error) {
+    console.log("Error occurred while fetching blog: ", error.message);
+    return ApiResponse(res, 500, "Error occurred while fetching blog");
+  }
+};
 const GetBlogs = async (req, res) => {
   let { page } = req.body;
   const Max_Limit = 5;
@@ -105,7 +136,7 @@ const TrendingBlogs = async (req, res) => {
 };
 
 const searchBlogs = async (req, res) => {
-  let { tag, query,author,page } = req.body;
+  let { tag, query, author, page } = req.body;
   let findQuery = {};
   const Max_Limit = 5;
 
@@ -116,8 +147,8 @@ const searchBlogs = async (req, res) => {
       $or: [{ title: { $regex: query, $options: "i" } }],
       draft: false,
     };
-  } else if(author){
-    findQuery = { author, draft: false }; 
+  } else if (author) {
+    findQuery = { author, draft: false };
   }
 
   Blog.find(findQuery)
@@ -140,7 +171,7 @@ const searchBlogs = async (req, res) => {
 };
 
 const GetBlogsCount = async (req, res) => {
-  let { tag, query ,author} = req.body;
+  let { tag, query, author } = req.body;
   if (tag) {
     Blog.countDocuments({ tags: tag, draft: false })
       .then((totalDocs) => {
@@ -162,7 +193,7 @@ const GetBlogsCount = async (req, res) => {
         console.log("Error occurred while fetching blogs: ", err.message);
         return ApiResponse(res, 500, "Error occurred while fetching blogs");
       });
-  } else if(author){
+  } else if (author) {
     Blog.countDocuments({ author, draft: false })
       .then((totalDocs) => {
         return ApiResponse(res, 200, "Blogs found", { totalDocs });
@@ -171,8 +202,7 @@ const GetBlogsCount = async (req, res) => {
         console.log("Error occurred while fetching blogs: ", err.message);
         return ApiResponse(res, 500, "Error occurred while fetching blogs");
       });
-  } 
-  else {
+  } else {
     Blog.countDocuments({ draft: false })
       .then((totalDocs) => {
         return ApiResponse(res, 200, "Blogs found", { totalDocs });
@@ -183,7 +213,6 @@ const GetBlogsCount = async (req, res) => {
       });
   }
 };
-
 
 export {
   CreateBlog,
