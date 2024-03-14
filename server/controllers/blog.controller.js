@@ -136,9 +136,9 @@ const TrendingBlogs = async (req, res) => {
 };
 
 const searchBlogs = async (req, res) => {
-  let { tag, query, author, page } = req.body;
+  let { tag, query, author, page ,limit} = req.body;
   let findQuery = {};
-  const Max_Limit = 5;
+  const Max_Limit = limit?limit:5;
 
   if (tag) {
     findQuery = { tags: tag, draft: false };
