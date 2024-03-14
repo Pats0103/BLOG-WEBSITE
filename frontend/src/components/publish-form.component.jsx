@@ -4,7 +4,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { EditorContext } from "../pages/editor.pages";
 import Tag from "./tags.component";
 import axios from "axios";
-import { User } from "lucide-react";
+
 import { UserContext } from "../App";
 import { useNavigate } from "react-router-dom";
 
