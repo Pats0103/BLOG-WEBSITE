@@ -37,9 +37,9 @@ const App = () => {
           <Route path="/user/:id" element={<ProfilePage />} />
           <Route path="blog/:blog_id" element={<BlogPage/>} />
 
-        {/* <Route path="*" element={<PageNotFound />} /> */}
+        <Route path="*" element={<PageNotFound />} />
         </Route>
-        <Route path="404" element={<PageNotFound />} />
+      
 
       </Routes>
     </UserContext.Provider>

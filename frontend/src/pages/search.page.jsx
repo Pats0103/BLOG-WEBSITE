@@ -38,7 +38,7 @@ function SearchPage() {
   };
   const fetchBlogByCategory = async ({ page = 1, create_new_arr = false }) => {
     axios
-      .post("/api/search-blogs", { query, page })
+      .post("/api/search-blogs", { tag:query, page })
       .then(async ({ data: { data } }) => {
         const formatedData = await filterPageData({
           state: blogs,

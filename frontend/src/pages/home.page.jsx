@@ -68,7 +68,7 @@ function HomePage() {
           countRoute: "/api/blog-count",
           data_to_send: { tag: pageState },
         });
-        console.log(formatedData);
+        
         setBlogs(formatedData);
       })
       .catch((err) => {

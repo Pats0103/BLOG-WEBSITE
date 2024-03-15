@@ -6,7 +6,7 @@ import PublishForm from "../components/publish-form.component";
 
 const blogStructure ={
   title: "",
-  banner: "",
+  banner: ""||null,
   content: [],
   tags: [],
   author:{personal_info:{}},

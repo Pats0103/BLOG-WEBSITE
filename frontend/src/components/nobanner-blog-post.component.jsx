@@ -14,7 +14,7 @@ function MinimalBlogPost({ content, author, index }) {
   } = content;
   let { fullname, profile_img, username } = author;
   return (
-    <Link to={`/blogs/${id}`} className="flex mb-8 ">
+    <Link to={`/blog/${id}`} className="flex mb-8 ">
       <h1 className="blog-index">{index < 10 ? "0" + (index + 1) : index}</h1>
       <div className="pl-4">
         <div className="flex gap-2 items-center mb-7 ">
