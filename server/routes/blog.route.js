@@ -1,21 +1,26 @@
 import { Router } from "express";
 import {
-  CreateBlog,
-  GetBlogs,
-  GetBlogsCount,
-  TrendingBlogs,
+  createBlog,
+  getBlogs,
+  getBlogsCount,
+  trendingBlogs,
   searchBlogs,
-  GetBlog
+  getBlog,
+  likeBlog,
+  isLikedByUser
 } from "../controllers/blog.controller.js";
 import verifyUser from "../middleware/verify.middleware.js";
 
 const router = Router();
 
-router.post("/create-blog", verifyUser, CreateBlog);
-router.post("/latest-blogs", GetBlogs);
-router.get("/trending-blogs", TrendingBlogs);
+router.post("/create-blog", verifyUser, createBlog);
+router.post("/latest-blogs", getBlogs);
+router.get("/trending-blogs", trendingBlogs);
 router.post("/search-blogs", searchBlogs);
-router.post("/blog-count", GetBlogsCount);
-router.post("/get-blog", GetBlog);
+router.post("/blog-count", getBlogsCount);
+router.post("/get-blog", getBlog);
+router.post("/like-blog", verifyUser,likeBlog)
+
+router.post("/is-liked-by-user", verifyUser, isLikedByUser)
 
 export default router;

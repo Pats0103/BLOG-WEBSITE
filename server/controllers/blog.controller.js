@@ -2,11 +2,15 @@ import Blog from "../models/Blog.js";
 import User from "../models/User.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { nanoid } from "nanoid";
+import Notification from "../models/Notification.js";
 
-const CreateBlog = async (req, res) => {
+const createBlog = async (req, res) => {
   const user = req.user;
-  const { title, content, banner, draft, des } = req.body;
+
+  const { title, content, banner, draft, des, id } = req.body;
+
   let tags = req.body.tags;
+
   if (!title) {
     return ApiResponse(res, 400, "Please fill in all fields");
   }
@@ -23,44 +27,66 @@ const CreateBlog = async (req, res) => {
   tags = tags.map((tag) => tag.toLowerCase());
 
   let blogId =
-    title.replace(/^a-zA-Z0-9/g, " ").replace(/\s+/g, "-") + nanoid(5);
+    id || title.replace(/^a-zA-Z0-9/g, " ").replace(/\s+/g, "-") + nanoid(5);
 
-  let blog = new Blog({
-    blog_id: blogId,
-    title,
-    content,
-    banner,
-    tags,
-    des,
-    author: user._id,
-    draft: Boolean(draft),
-  });
+  if (id) {
+    Blog.findOneAndUpdate(
+      { blog_id: id },
+      {
+        title,
+        content,
+        banner,
+        tags,
+        des,
+        draft: Boolean(draft),
+      }
+    )
+      .then((blog) => {
+        return ApiResponse(res, 201, "Blog updated successfully", blog);
+      })
 
-  blog
-    .save()
-    .then((blog) => {
-      let increment = draft ? 0 : 1;
-      User.findOneAndUpdate(
-        { _id: user._id },
-        {
-          $inc: { "account_info.total_posts": increment },
-          $push: { blogs: blog._id },
-        }
-      ).catch((err) => {
-        console.log("Error occurred while updating user: ", err.message);
-        return ApiResponse(res, 500, "Error occurred while updating user");
+      .catch((err) => {
+        console.log("Error occurred while updating blog: ", err.message);
+        return ApiResponse(res, 500, "Error occurred while updating blog");
       });
-      return ApiResponse(res, 201, "Blog created successfully", blog);
-    })
-    .catch((err) => {
-      console.log("Error occurred while creating blog: ", err.message);
-      return ApiResponse(res, 500, "Error occurred while creating blog");
+  } else {
+    let blog = new Blog({
+      blog_id: blogId,
+      title,
+      content,
+      banner,
+      tags,
+      des,
+      author: user._id,
+      draft: Boolean(draft),
     });
+
+    blog
+      .save()
+      .then((blog) => {
+        let increment = draft ? 0 : 1;
+        User.findOneAndUpdate(
+          { _id: user._id },
+          {
+            $inc: { "account_info.total_posts": increment },
+            $push: { blogs: blog._id },
+          }
+        ).catch((err) => {
+          console.log("Error occurred while updating user: ", err.message);
+          return ApiResponse(res, 500, "Error occurred while updating user");
+        });
+        return ApiResponse(res, 201, "Blog created successfully", blog);
+      })
+      .catch((err) => {
+        console.log("Error occurred while creating blog: ", err.message);
+        return ApiResponse(res, 500, "Error occurred while creating blog");
+      });
+  }
 };
-const DeleteBlog = () => {};
-const GetBlog = async (req, res) => {
-  let { blog_id } = req.body;
-  let incrementVal = 1;
+const deleteBlog = () => {};
+const getBlog = async (req, res) => {
+  let { blog_id, draft, mode } = req.body;
+  let incrementVal = mode != "edit" ? 1 : 0;
   try {
     const blog = await Blog.findOneAndUpdate(
       { blog_id },
@@ -68,15 +94,19 @@ const GetBlog = async (req, res) => {
     )
       .populate(
         "author",
-        "personal_info.username personal_info.profile_img  personal_info.fullname -_id"
+        "personal_info.username personal_info.profile_img  personal_info.fullname"
       )
-      .select("blog_id title banner tags activity publishedAt des content author -_id");
+      .select(
+        "blog_id title banner tags activity publishedAt des content author"
+      );
 
     if (!blog) return ApiResponse(res, 404, "Blog not found");
-
-    if(blog){
+    if (blog.draft && !draft) {
+      return ApiResponse(res, 404, "draft blog not accessible");
+    }
+    if (blog) {
       User.findOneAndUpdate(
-        { "personal_info.username": blog.author.personal_info.username},
+        { "personal_info.username": blog.author.personal_info.username },
         { $inc: { "account_info.total_reads": incrementVal } }
       ).catch((err) => {
         console.log("Error occurred while updating user: ", err.message);
@@ -90,7 +120,7 @@ const GetBlog = async (req, res) => {
     return ApiResponse(res, 500, "Error occurred while fetching blog");
   }
 };
-const GetBlogs = async (req, res) => {
+const getBlogs = async (req, res) => {
   let { page } = req.body;
   const Max_Limit = 5;
   Blog.find({ draft: false })
@@ -111,7 +141,7 @@ const GetBlogs = async (req, res) => {
       return ApiResponse(res, 500, "Error occurred while fetching blogs");
     });
 };
-const TrendingBlogs = async (req, res) => {
+const trendingBlogs = async (req, res) => {
   const Max_Limit = 10;
   Blog.find({ draft: false })
     .populate(
@@ -136,9 +166,9 @@ const TrendingBlogs = async (req, res) => {
 };
 
 const searchBlogs = async (req, res) => {
-  let { tag, query, author, page ,limit} = req.body;
+  let { tag, query, author, page, limit } = req.body;
   let findQuery = {};
-  const Max_Limit = limit?limit:5;
+  const Max_Limit = limit ? limit : 5;
 
   if (tag) {
     findQuery = { tags: tag, draft: false };
@@ -170,7 +200,7 @@ const searchBlogs = async (req, res) => {
     });
 };
 
-const GetBlogsCount = async (req, res) => {
+const getBlogsCount = async (req, res) => {
   let { tag, query, author } = req.body;
   if (tag) {
     Blog.countDocuments({ tags: tag, draft: false })
@@ -214,12 +244,76 @@ const GetBlogsCount = async (req, res) => {
   }
 };
 
+const likeBlog = async (req, res) => {
+  let user_id = req.user;
+  let { _id, isLikedByUser } = req.body;
+
+  let increment = isLikedByUser ? -1 : 1;
+
+  try {
+    const likedBlog = await Blog.findOneAndUpdate(
+      { _id },
+      { $inc: { "activity.total_likes": increment } }
+    );
+
+    if (!likedBlog) return ApiResponse(res, 404, "Blog not found");
+
+    if (!isLikedByUser) {
+      const newLike = new Notification({
+        type: "like",
+        blog: _id,
+        notification_for: likedBlog.author,
+        user: user_id,
+      });
+
+      const notification = await newLike.save();
+    } else {
+      const notification = await Notification.findOneAndDelete({
+        type: "like",
+        blog: _id,
+
+        user: user_id,
+      });
+    }
+
+    if (likedBlog) {
+      return ApiResponse(res, 200, "Blog liked successfully");
+      i;
+    }
+  } catch (error) {
+    console.log("Error occurred while liking blog: ", error.message);
+    return ApiResponse(res, 500, "Error occurred while liking blog");
+  }
+};
+
+const isLikedByUser = async (req, res) => {
+  let user_id = req.user;
+  let { _id } = req.body;
+
+  try {
+    const likedBlog = await Notification.exists({
+      type: "like",
+      blog: _id,
+      user: user_id,
+    });
+
+    if (likedBlog) {
+      return ApiResponse(res, 200, "Blog liked by user", true);
+    }
+    return ApiResponse(res, 200, "Blog not liked by user", false);
+  } catch (error) {
+    console.log("Error occurred while checking like: ", error.message);
+    return ApiResponse(res, 500, "Error occurred while checking like");
+  }
+};
 export {
-  CreateBlog,
-  DeleteBlog,
+  createBlog,
+  deleteBlog,
   searchBlogs,
-  GetBlog,
-  GetBlogs,
-  TrendingBlogs,
-  GetBlogsCount,
+  getBlog,
+  getBlogs,
+  trendingBlogs,
+  getBlogsCount,
+  likeBlog,
+  isLikedByUser,
 };
