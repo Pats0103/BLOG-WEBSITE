@@ -6,12 +6,13 @@ import Tag from "./tags.component";
 import axios from "axios";
 
 import { UserContext } from "../App";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const tagLimit = 5;
 const textLimit = 400;
 
 function PublishForm() {
+  const {blog_id} = useParams();
   const navigate = useNavigate();
   let {
     setEditorState,
@@ -80,7 +81,7 @@ function PublishForm() {
 
     //publish blog
     axios
-      .post("/api/create-blog", blogData, {
+      .post("/api/create-blog", {...blogData,id:blog_id}, {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
